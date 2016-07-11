@@ -1,0 +1,70 @@
+---
+#   序号    路由类型        内网ip                 外网ip          端口         core,cspip,scpip          tcp判断
+proxysvrd:
+- { num: 1, type: '-', lip: '10.0.0.1', oip: '10.0.0.1', port: [19000], key: [1001,1002,1003], db: ['', ''], tcp: 'False' }
+
+base_dbsvrd:
+- { num: 1, type: 'DB', lip: '10.0.0.1', oip: '10.0.0.1', port: [''], key: [1002,2002,3002], db: ['10.0.0.1', 3306], tcp: 'False' }
+
+auth_dbsvrd:
+- { num: 1, type: 'AuthDB', lip: '10.0.0.1', oip: '10.0.0.1', port: [''], key: [1003,2003,3003], db: ['10.0.0.1', 3306], tcp: 'False' }
+
+logsvrd:
+- { num: 1, type: '-', lip: '10.0.0.1', oip: '10.0.0.1', port: [9101], key: [1004,2004,3004], db: ['mongodb://10.0.0.2', ''], tcp: 'False' }
+
+authsvrd:
+- { num: 1, type: 'Other', lip: '10.0.0.2', oip: '10.0.0.2', port: [8088], key: [1005,2005,3005], db: ['', ''], tcp: 'True' }
+
+gmsvrd:
+- { num: 1, type: 'Gm', lip: '10.0.0.2', oip: '10.0.0.2', port: [28000], key: [1006,2006,3006], db: ['', ''], tcp: 'True' }
+
+gtplsvrd:
+- { num: 1, type: 'GTPL', lip: '10.0.0.1', oip: '10.0.0.1', port: [''], key: [1007,2007,3007], db: ['', ''], tcp: 'False' }
+
+redis_dbsvrd:
+- { num: 1, type: 'Private', lip: '10.0.0.1', oip: '10.0.0.1', port: [''], key: [1008,2008,3008], db: ['10.0.0.2', 6379], tcp: 'False' }
+- { num: 2, type: 'Private', lip: '10.0.0.1', oip: '10.0.0.1', port: [''], key: [1009,2009,3009], db: ['10.0.0.2', 6379], tcp: 'False' }
+
+hallsvrd:
+- { num: 1, type: 'Hall', lip: '10.0.0.2', oip: '10.0.0.2', port: [443], key: [1010,2010,3010], db: ['', ''], tcp: 'True' }
+
+tablesvrd:
+- { num: 1, type: 'Table', lip: '10.0.0.1', oip: '10.0.0.1', port: [''], key: [1011,2011,3011], db: ['', ''], tcp: 'False' }
+
+gamesvrd:
+- { num: 1, type: 'Main', lip: '10.0.0.2', oip: '10.0.0.2', port: [81], key: [1012,2012,3012], db: ['', ''], tcp: 'True' }
+
+httpsvrd:
+- { num: 2, type: 'Other', lip: '10.0.0.1', oip: '10.0.0.1', port: [8080], key: [1013,2012,3012], db: ['', ''], tcp: 'False' }
+
+thirdsvrd:
+- { num: 1, type: 'Third', lip: '10.0.0.1', oip: '10.0.0.1', port: [''], key: [1014,2014,3014], db: ['10.0.0.2', 3306], tcp: 'False' }
+
+shopsvrd:
+- { num: 3, type: 'Other', lip: '10.0.0.1', oip: '10.0.0.1', port: [''], key: [1015,2015,3015], db: ['', ''], tcp: 'False' }
+
+matchroomsvrd:
+- { num: 4, type: 'Other', lip: '10.0.0.1', oip: '10.0.0.1', port: [''], key: [1016,2016,3016], db: ['', ''], tcp: 'False' }
+
+matchsvrd:
+- { num: 1, type: 'Match', lip: '10.0.0.2', oip: '10.0.0.2', port: [8089], key: [1017,2017,3017], db: ['', ''], tcp: 'True' }
+- { num: 2, type: 'Match', lip: '10.0.0.2', oip: '10.0.0.2', port: [8090], key: [1018,2018,3018], db: ['', ''], tcp: 'True' }
+- { num: 3, type: 'Match', lip: '10.0.0.2', oip: '10.0.0.2', port: [8091], key: [1019,2019,3019], db: ['', ''], tcp: 'True' }
+
+friendsvrd:
+- { num: 1, type: 'Friend', lip: '10.0.0.1', oip: '10.0.0.1', port: [''], key: [1020,2020,3020], db: ['', ''], tcp: 'False' }
+
+eventsvrd:
+- { num: 1, type: 'Event', lip: '10.0.0.1', oip: '10.0.0.1', port: [''], key: [1021,2021,3021], db: ['', ''], tcp: 'False' }
+
+chatsvrd:
+- { num: 1, type: 'Chat', lip: '10.0.0.2', oip: '10.0.0.2', port: [8093], key: [1022,2022,3022], db: ['', ''], tcp: 'True' }
+
+globalsvrd:
+- { num: 1, type: 'Global', lip: '10.0.0.1', oip: '10.0.0.1', port: [''], key: [1023,2023,3023], db: ['', ''], tcp: 'False' }
+
+clubsvrd:
+- { num: 1, type: 'Club', lip: '10.0.0.2', oip: '10.0.0.2', port: [''], key: [1024,2024,3024], db: ['', ''], tcp: 'True' }
+
+casino3svrd:
+- { num: 1, type: 'Playground', lip: '10.0.0.2', oip: '10.0.0.2', port: [8094], key: [1025,2025,3025], db: ['', ''], tcp: 'True' }

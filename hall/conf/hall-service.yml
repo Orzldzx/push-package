@@ -1,0 +1,6 @@
+---
+reload:
+  - proxysvrd.1
+
+restart:
+  - authsvrd
