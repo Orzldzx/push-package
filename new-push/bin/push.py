@@ -1,34 +1,49 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # 1un
-# 2016-03-22
+# 2016-08-15
+
+'''
+    Python version: 2.7.3
+        install: paramiko
+'''
 
 # --------------模块------------
 
 import yaml
-import logging, logging.config
+import logging, logging.config      # 脚本直接配置不用加载 logging.config 模块
 import os, sys, shutil, subprocess, commands, paramiko
 import threading
 
 # --------------变量------------
 
-# 加载日志配置
-logging.config.fileConfig("../conf/log.cfg")
-logger_user = logging.getLogger("user")
 # 定义各类目录路径
-zip_path = ''
-pkg_path = '/tmp/aaaaa'
-tmp_path = '/tmp/work/hall'
-pwd_path = os.getcwd()
-bak_path = os.path.abspath('../backing')
-remoteBakDir  = '/alidata1/backing'
+pwd_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+pkg_path = pwd_path + '/pkg'
+tmp_path = pwd_path + '/work'
+bak_path = pwd_path + '/backing'
+remoteBakDir  = '/data/backing'
 remoteWorkDir = '/svndata'
 # 定义各类文件路径
-config_file = '../conf/hall-push.yml'
-exclude_file = '../conf/hall-exclude.txt'
-bakListFile = bak_path+'/'+'backup.list'
+config_file = pwd_path + '/conf/config-services.yml'
+exclude_file = pwd_path + '/conf/exclude-service-list.txt'
+bakListFile = bak_path + '/backup.list'
 # 定义各类文件名
 remote_bak_file = '/tmp/XimiHallPushFileList.txt'
+# 加载日志配置(配置文件)
+logging.config.fileConfig(pwd_path + '/conf/logs.cfg')
+logger_user = logging.getLogger("user")
+# 脚本直接配置
+#logging.basicConfig(level=logging.DEBUG,
+#                     format='%(asctime)s %(levelname)-6s %(message)s',
+#                     datefmt='%Y-%m-%d %X',
+#                     filename='../log/push.log',
+#                     filemode='a')
+#console = logging.StreamHandler()
+#console.setLevel(logging.DEBUG)
+#formatter = logging.Formatter('%(asctime)s %(levelname)-6s %(message)s')
+#console.setFormatter(formatter)
+#logging.getLogger('').addHandler(console)
 # 限制同时进行的线程数量
 threading_sum = threading.Semaphore(5)
 

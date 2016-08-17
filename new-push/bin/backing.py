@@ -126,14 +126,23 @@ class Backing(object):
 # ----------------------------
 
 if __name__ == '__main__':
+    # 定义目录路径
+    pwd_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    cfg_path = pwd_path + '/conf'
+    bak_path = pwd_path + '/backing'
+    # 配置文件路径
+    config_services_file = cfg_path + '/config-services.yml'
+    config_log_file = cfg_path + '/logs.cfg'
+    change_stats_services_file = cfg_path + '/change-stats-services.yml'
+    backup_services_list_file = bak_path + '/backup.list'
     # 加载日志配置
-    logging.config.fileConfig("../conf/log.cfg")
+    logging.config.fileConfig(config_log_file)
     logger_user = logging.getLogger("user")
     # 加载服务列表
-    services_options = load_yaml('../conf/ddz-push.yml')
-    handle_service_names = load_yaml('../conf/ddz-service.yml')
+    services_options = load_yaml(config_services_file)
+    handle_service_names = load_yaml(change_stats_services_file)
     # 加载回滚主机列表
-    backing_host_list_file = '../backing/backup.list'
+    backing_host_list_file = backup_services_list_file
     # 开始回滚
     Backing1 = Backing()
     Backing1.changeService(services_options, handle_service_names)
