@@ -11,9 +11,9 @@
 # --------------模块------------
 
 import yaml
-import logging, logging.config      # 脚本直接配置不用加载 logging.config 模块
+import logging, logging.config
 import os, sys, shutil, subprocess, commands, paramiko
-import threading
+import threading, time
 
 # --------------变量------------
 
@@ -30,10 +30,9 @@ exclude_file = pwd_path + '/conf/exclude-service-list.txt'
 bakListFile = bak_path + '/backup.list'
 # 定义各类文件名
 remote_bak_file = '/tmp/XimiHallPushFileList.txt'
-# 加载日志配置(配置文件)
+# 加载日志配置
 logging.config.fileConfig(pwd_path + '/conf/logs.cfg')
 logger_user = logging.getLogger("user")
-# 脚本直接配置
 #logging.basicConfig(level=logging.DEBUG,
 #                     format='%(asctime)s %(levelname)-6s %(message)s',
 #                     datefmt='%Y-%m-%d %X',
@@ -106,18 +105,20 @@ def sync(src, dest=None, exclude=False, include=False, host=False, remote=False,
         else:
             CheckHost.ping(host)
             dest = '{0}:{1}'.format(host, mod) if '/' in mod else '{0}::{1}'.format(host, mod)
-            cmd = '/usr/bin/rsync --port=1888 -azP {0} {1} {2} {3}'.format(include, exclude, src, dest)
+            cmd = "/usr/bin/rsync --port=1888 -azP {0} {1} {2} {3}".format(include, exclude, src, dest) if not 'XimiHallPushFileList.txt' in dest else "/usr/bin/rsync --port=1888 -azP -e 'ssh -p 13021' {0} {1} {2} {3}".format(include, exclude, src, dest)
         # ---------
+        print_Show_Msg('开始执行: {0}'.format(cmd), 'debug')
         ps = subprocess.Popen(cmd ,shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         ps.wait()
         stdout, stderr = ps.communicate()
-        print_Show_Msg('执行完成: \n\nstdout: {0} \nstderr: {1}'.format(stdout, stderr), 'debug')
+        #if not stdout or not stderr:
+            #print_Show_Msg('执行完成: \n\nstdout: {0} \nstderr: {1}'.format(stdout, stderr), 'debug')
         print_Show_Msg('复制完成: {0} >> {1}'.format(src,dest), 'debug')
     except Exception,e:
         err_Exit_Show_Msg('复制失败: {0}'.format(e))
 
 @log('Exec SSH ')
-def ssh(cmd,host,user='root',port=22,keyfile='/root/.ssh/id_rsa'):
+def ssh(cmd,host,user='root',port=13021,keyfile='/root/.ssh/id_rsa'):
     '''远程执行命令'''
     ssh = paramiko.SSHClient()
     key = paramiko.RSAKey.from_private_key_file(keyfile)
@@ -128,7 +129,7 @@ def ssh(cmd,host,user='root',port=22,keyfile='/root/.ssh/id_rsa'):
     try:
         print_Show_Msg('正在执行: {0} - "{1}"'.format(host, cmd), 'debug')
         stdin,stdout,stderr = ssh.exec_command(cmd)
-        print_Show_Msg('执行完成: \n\nstdout: {0} \nstderr: {1}'.format(stdout.read(), stderr.read()), 'debug')
+        #print_Show_Msg('执行完成: \n\nstdout: {0} \nstderr: {1}'.format(stdout.read(), stderr.read()), 'debug')
         ssh.close()
     except SSHException,e: err_Exit_Show_Msg('无法连接目标主机: '+e)
 
@@ -143,12 +144,13 @@ def loop(func,conf,file_name=False,exclude=False,include=False):
                     _name,_num      = service_name, service_opt['num']
                     _lanip, _wlanip = service_opt['lip'], service_opt['oip']
                     _port, _deplist = service_opt['port'], service_opt['dep']
+                    _GWtype         = service_opt['GWtype']
                     # --------
                     src  = pkg_path
                     dest = '{0}/{1}'.format(tmp_path, _lanip)
                     exclude_text = '{0}/{1}'.format(Type, service_name)
                     # --------
-                    func(Type=Type,service_name=_name,file_name=file_name,src=src,dest=dest,WLANIP=_wlanip,host=_lanip,exclude=exclude,include=include,service_num=str(_num),text=exclude_text,port=_port,deplist=_deplist)
+                    func(Type=Type,service_name=_name,file_name=file_name,src=src,dest=dest,WLANIP=_wlanip,host=_lanip,exclude=exclude,include=include,service_num=str(_num),text=exclude_text,port=_port,deplist=_deplist,GWtype=_GWtype)
 
 @log('Write text to the file ')
 def write_File(file_name, text, **kw):
@@ -177,7 +179,7 @@ def change_Test_file(select_file_name, select, text):
         err_Exit_Show_Msg('替换失败: '+e)
 
 @log('Config service ')
-def change_Service_config(Type,service_name,host,service_num,port,WLANIP,deplist, **kw):
+def change_Service_config(Type,service_name,host,service_num,port,WLANIP,deplist,GWtype, **kw):
     '''根据服务类型选择配置方式'''
     try:
         print_Show_Msg('准备配置: {0:15} {1}'.format(service_name,'-'*10), 'info')
@@ -191,7 +193,8 @@ def change_Service_config(Type,service_name,host,service_num,port,WLANIP,deplist
             serviceNameNum = service_name+'.'+service_num.split('.')[1]
             dest = tmp_path+'/'+host+'/'+Type+'/'+serviceNameNum
             path = '{0}/{1}/bin/{1}'.format(Type, service_name)
-        # ---------
+        
+    # ---------
     except KeyError,e:
         err_Exit_Show_Msg('准备错误: 变量错误 - %s' %e)
     try:
@@ -207,34 +210,36 @@ def change_Service_config(Type,service_name,host,service_num,port,WLANIP,deplist
     try:
         if service_name == 'cfgcenter': return
         elif Type == 'games':
-            change_GAMES_Service_config(Type,service_name,host,service_num,dest,port,WLANIP)
+            change_GAMES_Service_config(Type,service_name,host,service_num,dest,port,WLANIP,GWtype)
         elif Type == 'service':
-            change_SERVICE_Service_config(Type,service_name,host,service_num,dest,port,WLANIP,deplist)
+            change_SERVICE_Service_config(Type,service_name,host,service_num,dest,port,WLANIP,deplist,GWtype)
     except Exception,e:
         err_Exit_Show_Msg('类型错误: {0}, {1}'.format(Type,e))
 
 @log('Edit config file ')
-def change_GAMES_Service_config(Type,service_name,host,service_num,dest,port,WLANIP):
+def change_GAMES_Service_config(Type,service_name,host,service_num,dest,port,WLANIP,GWtype):
     '''配置local'''
     print_Show_Msg('修改配置: {0} to local'.format(service_name), 'info')
     # ---------
     cfg_game = '{0}/config/game.cfg'.format(dest)
     dep_srv = '{0}/deploy/server.cfg'.format(dest)
-    dep_cli = '{0}/deploy/clients/robot.cfg'.format(dest)
+#    dep_cli = '{0}/deploy/clients/robot.cfg'.format(dest)
     # ---------
     gw_lan_ip      = conf['service']['gamegw'][0]['lip']
     gw_app_port    = conf['service']['gamegw'][0]['port'][0]
     # ---------
-    robot_all_id   = conf['games']['robot'][0]['num']
-    robot_lan_ip   = conf['games']['robot'][0]['lip']
-    robot_app_port = conf['games']['robot'][0]['port'][0]
+#    robot_all_id   = conf['games']['robot'][0]['num']
+#    robot_lan_ip   = conf['games']['robot'][0]['lip']
+#    robot_app_port = conf['games']['robot'][0]['port'][0]
     # ---------
     srv_wlan_ip, srv_lan_ip     = WLANIP, host
     srv_app_port, srv_http_port = port[0], port[1]
+    srv_gw_type                 = GWtype
     srv_id, srv_id_num          = service_num.split('.')[0], service_num.split('.')[1]
     # ---------
     # 修改服务配置
-    files = [cfg_game,dep_srv,dep_cli] if service_name != 'robot' else [dep_srv]
+#    files = [cfg_game,dep_srv,dep_cli] if service_name != 'robot' else [dep_srv]
+    files = [cfg_game,dep_srv]
     try:
         for f in files:
             if ChangeFile.check_file_exists(f, 'pass'):
@@ -242,25 +247,27 @@ def change_GAMES_Service_config(Type,service_name,host,service_num,dest,port,WLA
                 if f == dep_srv:
                     change_Test_file(f, 'Id', 'Id: "{0}.{1}"'.format(srv_id,srv_id_num))
                     change_Test_file(f, 'Addrs', 'Addrs: "0.0.0.0:{0}"'.format(srv_app_port))
+                    change_Test_file(f, 'IsGateway', 'IsGateway: "{0}"'.format(srv_gw_type))
                     change_Test_file(f, 'HttpAddr', 'HttpAddr: "{0}:{1}"'.format(srv_lan_ip,srv_http_port))
                 if f == cfg_game:
                     change_Test_file(f, 'GameGW', 'GameGW: "{0}:{1}"'.format(gw_lan_ip,gw_app_port))
                     change_Test_file(f, 'ServerAddr', 'ServerAddr: "{0}:{1}"'.format(srv_wlan_ip,srv_app_port))
-                if f == dep_cli:
-                    change_Test_file(f, 'Id', 'Id: "{0}"'.format(robot_all_id))
-                    change_Test_file(f, 'Addrs', 'Addrs: "{0}:{1}"'.format(robot_lan_ip,robot_app_port))
             else: return False
     except Exception,e:
         err_Exit_Show_Msg('修改失败: '+e)
 
 @log('Edit config file ')
-def change_SERVICE_Service_config(Type,service_name,host,service_num,dest,port,WLANIP,deplist):
-    '''配置cfgcenter'''
+def change_SERVICE_Service_config(Type,service_name,host,service_num,dest,port,WLANIP,deplist,GWtype):
+    '''
+    配置cfgcenter
+    '''
+    print '\n'
     print_Show_Msg('修改配置: {0} to cfgcenter'.format(service_name), 'info')
     # ---------
     serviceName, serviceNum, serviceType = service_name, service_num, Type
     serviceLanIpAddr, serviceWLanIpAddr  = host, WLANIP
     serviceAppPort, serviceHttpPort      = port[0], port[1]
+    serviceGWType                        = GWtype
     serviceCfgPath, serviceSyncPath      = dest+'/deploy/server.cfg', dest+'/deploy/cfgsync.cfg'
     # ---------
     centerConf = conf['service']['cfgcenter'][0]
@@ -268,30 +275,31 @@ def change_SERVICE_Service_config(Type,service_name,host,service_num,dest,port,W
     CfgToService = centerCfgdir+'/'+serviceNum.replace('.','/')
     # ---------
     # 修改cfgcenter连接配置
-    if ChangeFile.check_file_exists(serviceSyncPath, 'pass'): change_Test_file(serviceSyncPath, 'Addr:', 'Addr: "{0}:{1}"'.format(centerConf['lip'],centerConf['port'][0]))
+    if ChangeFile.check_file_exists(serviceSyncPath, 'pass'):
+        change_Test_file(serviceSyncPath, 'Addr:', 'Addr: "{0}:{1}"'.format(centerConf['lip'],centerConf['port'][0]))
     # 修改server.cfg
     if ChangeFile.check_file_exists(serviceCfgPath, 'pass'):
         change_Test_file(serviceCfgPath, 'Id', 'Id: "{0}"'.format(serviceNum))
         change_Test_file(serviceCfgPath, 'Addrs', 'Addrs: "0.0.0.0:{0}"'.format(serviceAppPort))
         change_Test_file(serviceCfgPath, 'HttpAddr', 'HttpAddr: "{0}:{1}"'.format(serviceLanIpAddr,serviceHttpPort))
-        # 修改cfgcenter/server.cfg
-        print_Show_Msg('正在配置: {0} 服务 server 配置'.format(serviceName,CfgToService+'/server.cfg'),'info')
-        ChangeDir.check_dir_exists(CfgToService,'touch')
-        msg = '''Id: "%s"
+    # 修改cfgcenter/server.cfg
+    print_Show_Msg('正在配置: {0} 服务 {1} 配置'.format(serviceName,CfgToService+'/server.cfg'),'info')
+    ChangeDir.check_dir_exists(CfgToService,'touch')
+    msg = '''Id: "%s"
 Addrs: "0.0.0.0:%d"
-IsGateway: false
+IsGateway: %s
 SendLimit: 1000
 RecvLimit: 1000
 HttpAddr: "%s:%d"
-        ''' %(serviceNum,serviceAppPort,serviceLanIpAddr,serviceHttpPort)
-        ChangeFile.writeText(CfgToService+'/server.cfg','w+',msg)
-        # 修改cfgcenter/依赖配置
-        if type(deplist) == list:
-            for dep in deplist:
-                ChangeDir.check_dir_exists(CfgToService+'/clients','touch')
-                print_Show_Msg('正在配置: {0} 服务 依赖项 {1}'.format(serviceName,dep),'info')
-                if dep == 'corelogic':
-                    msg = '''ServerEntries {
+        ''' %(serviceNum,serviceAppPort,serviceGWType,serviceLanIpAddr,serviceHttpPort)
+    ChangeFile.writeText(CfgToService+'/server.cfg','w+',msg)
+    # 修改cfgcenter/依赖配置
+    if type(deplist) == list:
+        for dep in deplist:
+            ChangeDir.check_dir_exists(CfgToService+'/clients','touch')
+            print_Show_Msg('正在配置: {0} 服务 依赖项 {1}'.format(serviceName,dep),'info')
+            if dep == 'corelogic':
+                msg = '''ServerEntries {
     Id : "%s"
     Addrs : "%s:%d"
 }
@@ -300,12 +308,12 @@ RouteEntries {
     HashEnd : 511
     ServerIdx : 0
 }
-SendLimit : 10
-RecvLimit : 10\n''' %(conf['service']['coredata_logic'][0]['num'],
+SendLimit : 100
+RecvLimit : 100\n''' %(conf['service']['coredata_logic'][0]['num'],
                       conf['service']['coredata_logic'][0]['lip'],
                       conf['service']['coredata_logic'][0]['port'][0])
-                elif dep == 'oplog':
-                    msg = '''ServerEntries {
+            elif dep == 'oplog':
+                msg = '''ServerEntries {
     Id : "%s"
     Addrs : "%s:%d"
 }
@@ -314,12 +322,12 @@ RouteEntries {
     HashEnd : 511
     ServerIdx : 0
 }
-SendLimit : 10
-RecvLimit : 10\n''' %(conf['service']['oplogs'][0]['num'],
+SendLimit : 100
+RecvLimit : 100\n''' %(conf['service']['oplogs'][0]['num'],
                       conf['service']['oplogs'][0]['lip'],
                       conf['service']['oplogs'][0]['port'][0])
-                else:
-                    msg = '''ServerEntries {
+            else:
+                msg = '''ServerEntries {
     Id : "%s"
     Addrs : "%s:%d"
 }
@@ -328,11 +336,11 @@ RouteEntries {
     HashEnd : 511
     ServerIdx : 0
 }
-SendLimit : 10
-RecvLimit : 10\n''' %(conf['service'][dep][0]['num'],
+SendLimit : 100
+RecvLimit : 100\n''' %(conf['service'][dep][0]['num'],
                       conf['service'][dep][0]['lip'],
                       conf['service'][dep][0]['port'][0])
-                ChangeFile.writeText(CfgToService+'/clients/'+dep+'.cfg','w+',msg)
+            ChangeFile.writeText(CfgToService+'/clients/'+dep+'.cfg','w+',msg)
 
 @log('Backup remote host the files ')
 def bak_Remote_Files(remoteBakDir,remoteWorkDir):
@@ -352,12 +360,17 @@ def bak_Remote_Files(remoteBakDir,remoteWorkDir):
         err_Exit_Show_Msg('执行失败: {0}'.format(e))
         # ---------
     try:
+        threads = {}
         for host in hosts:
             cmd = 'rm -rf {0}/* && rsync -avP --files-from={2} {1}/ {0}/'.format(remoteBakDir,remoteWorkDir,remote_bak_file)
             print_Show_Msg('正在执行: 备份 {0} 相关文件'.format(host), 'info')
             t = MyThreadSSH(threading_sum,cmd,host)
-            t.start()
-        t.join()
+            threads[host]=t
+        for host in hosts:
+            threads[host].start()
+            time.sleep(2)
+        for host in hosts:
+            threads[host].join()
     except Exception,e:
         err_Exit_Show_Msg('推送失败: {0} '.format(e))
 
@@ -367,12 +380,17 @@ def push_files_to_servers():
     except Exception,e: err_Exit_Show_Msg('获取失败: {0} '.format(e))
     else: print_Show_Msg('获取成功: 远程主机列表获取成功', 'debug')
     try:
+        threads = {}
         for host in hosts:
             print_Show_Msg('正在执行: 推送文件到 {0} 主机'.format(host), 'info')
             src = tmp_path+'/'+host
             t = MyThreadSYNC(threading_sum,src,None,host,remote=True,mod='svn')
-            t.start()
-        t.join()
+            threads[host]=t
+        for host in hosts:
+            threads[host].start()
+            time.sleep(2)
+        for host in hosts:
+            threads[host].join()
     except Exception,e:
         err_Exit_Show_Msg('推送失败: {0} '.format(e))
     else:
@@ -527,6 +545,8 @@ def main():
     global conf
     # 清空exclude文件
     ChangeFile.clearFile(exclude_file)
+    # 重置回滚列表
+    ChangeFile.clearFile(bakListFile)
     # 清空工作目录
     ChangeDir.check_dir_exists(tmp_path,'touch')
     ChangeDir.clearDir(tmp_path)

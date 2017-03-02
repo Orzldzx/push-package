@@ -1,60 +1,38 @@
 ---
-#   序号    内网ip                 外网ip              端口
+#   序号    内网ip                 外网ip              端口			依赖
 games:
-    gandg:
-    - { num: 6.1,  lip: '192.168.7.96', oip: '192.168.7.96', port: [20611,20612], dep: ['robot'] }
-    mtt:
-    - { num: 4.1,  lip: '192.168.7.96', oip: '192.168.7.96', port: [20411,20412], dep: ['robot'] }
-    robot:
-    - { num: 1.1,  lip: '192.168.7.96', oip: '192.168.7.96', port: [20111,20112], dep: None }
-    teenpatti:
-    - { num: 2.1,  lip: '192.168.7.96', oip: '192.168.7.96', port: [20211,20212], dep: ['robot'] }
-    - { num: 2.2,  lip: '192.168.7.96', oip: '192.168.7.96', port: [20221,20222], dep: ['robot'] }
-    tgandg:
-    - { num: 7.1,  lip: '192.168.7.96', oip: '192.168.7.96', port: [20711,20712], dep: ['robot'] }
-    tmtt:
-    - { num: 9.1,  lip: '192.168.7.96', oip: '192.168.7.96', port: [20911,20912], dep: ['robot'] }
-    texas:
-    - { num: 3.1,  lip: '192.168.7.96', oip: '192.168.7.96', port: [20311,20312], dep: ['robot'] }
-    tsng:
-    - { num: 8.1,  lip: '192.168.7.96', oip: '192.168.7.96', port: [20811,20812], dep: ['robot'] }
+    slots:
+    - { num: 12.1, lip: '10.0.0.1', oip: '50.100.11.123', port: [ 9404, 19902 ], dep: None, GWtype: 'false' }
+    match:
+    - { num: 58.1, lip: '10.0.0.1', oip: '50.100.11.123', port: [ 12058, 19958 ], dep: None, GWtype: 'false' }
 service:
-    activitycenter:
-    - { num: 1.1,  lip: '192.168.7.96', oip: '192.168.7.96', port: [ 30111, 30112 ] , dep: ['corelogic'] }
+    matchinfo:
+    - { num: 18.1,  lip: '10.0.0.2', oip: '80.22.45.3', port: [ 12018, 19018 ] , dep: None, GWtype: 'false' }
     auth:
-    - { num: 7.1,  lip: '192.168.7.96', oip: '192.168.7.96', port: [ 30711, 30712 ] , dep: ['corelogic','hall','oplog','statuskeeper'] }
+    - { num: 7.1,  lip: '10.0.0.2', oip: '80.22.45.3', port: [ 17000, 9007 ] , dep: ['corelogic','hall','oplog','statuskeeper'], GWtype: 'false' }
     cfgcenter:
-    - { num: None, lip: '192.168.7.96', oip: '192.168.7.96', port: [ 15000, 16000 ] , dep: None }
+    - { num: None, lip: '10.0.0.3', oip: '220.85.60.31', port: [ 15000, 16000 ] , dep: None, GWtype: 'false' }
     coredata_data:
-    - { num: 6.1,  lip: '192.168.7.96', oip: '192.168.7.96', port: [ 30611, 30612 ] , dep: None }
+    - { num: 6.1,  lip: '10.0.0.3', oip: '220.85.60.31', port: [ 12000, 9000 ] , dep: None, GWtype: 'false' }
     coredata_logic:
-    - { num: 5.1,  lip: '192.168.7.96', oip: '192.168.7.96', port: [ 30511, 30512 ] , dep: ['coredata_data'] }
-    feedback:
-    - { num: 18.1, lip: '192.168.7.96', oip: '192.168.7.96', port: [ 31811, 31812 ] , dep: ['corelogic'] }
+    - { num: 5.1,  lip: '10.0.0.3', oip: '220.85.60.31', port: [ 12001, 9001 ] , dep: ['coredata_data'], GWtype: 'false' }
     gamegw:
-    - { num: 9.1,  lip: '192.168.7.96', oip: '192.168.7.96', port: [ 30911, 30912 ] , dep: ['auth','corelogic','gamelist','hall','matchsign','oplog','statuskeeper','toplist'] }
+    - { num: 9.1,  lip: '10.0.0.3', oip: '220.85.60.31', port: [ 22000, 9008 ] , dep: ['jackpot','auth','corelogic','gamelist','hall','oplog','statuskeeper','toplist','matchinfo'], GWtype: 'true' }
     gamelist:
-    - { num: 12.1, lip: '192.168.7.96', oip: '192.168.7.96', port: [ 31211, 31212 ] , dep: ['corelogic','oplog'] }
+    - { num: 12.1, lip: '10.0.0.2', oip: '80.22.45.3', port: [ 12007, 9011 ] , dep: ['corelogic','oplog'], GWtype: 'false' }
     gamemaster:
-    - { num: 14.1, lip: '192.168.7.96', oip: '192.168.7.96', port: [ 31411, 31412 ] , dep: ['corelogic'] }
+    - { num: 14.1, lip: '10.0.0.3', oip: '220.85.60.31', port: [ 9320, 9321 ] , dep: ['corelogic'], GWtype: 'true' }
     gateway:
-    - { num: 2.1,  lip: '192.168.7.96', oip: '192.168.7.96', port: [ 30211, 30212 ] , dep: ['auth','hall','minigames','social','toplist','gamelist','matchsign','recharge','statuskeeper','version'] }
+    - { num: 2.1,  lip: '10.0.0.2', oip: '80.22.45.3', port: [ 9403, 9004 ] , dep: ['jackpot','auth','hall','minigames','social','toplist','gamelist','recharge','statuskeeper','matchinfo','version'], GWtype: 'true' }
     hall:
-    - { num: 4.1,  lip: '192.168.7.96', oip: '192.168.7.96', port: [ 30411, 30412 ] , dep: ['corelogic','oplog','statuskeeper','toplist'] }
-    matchsign:
-    - { num: 16.1, lip: '192.168.7.96', oip: '192.168.7.96', port: [ 31611, 31612 ] , dep: ['corelogic','hall','oplog'] }
-    minigames:
-    - { num: 17.1, lip: '192.168.7.96', oip: '192.168.7.96', port: [ 31711, 31712 ] , dep: ['corelogic','oplog'] }
-    - { num: 17.2, lip: '192.168.7.96', oip: '192.168.7.96', port: [ 31721, 31722 ] , dep: ['corelogic','oplog'] }
+    - { num: 4.1,  lip: '10.0.0.2', oip: '80.22.45.3', port: [ 12003, 9002 ] , dep: ['corelogic','oplog','statuskeeper','toplist'], GWtype: 'false' }
     oplogs:
-    - { num: 8.1,  lip: '192.168.7.96', oip: '192.168.7.96', port: [ 30811, 30812 ] , dep: None }
+    - { num: 8.1,  lip: '10.0.0.3', oip: '220.85.60.31', port: [ 12004, 9006 ] , dep: None, GWtype: 'false' }
     recharge:
-    - { num: 11.1, lip: '192.168.7.96', oip: '192.168.7.96', port: [ 31111, 31112 ] , dep: ['corelogic','hall','oplog','statuskeeper','toplist'] }
-    social:
-    - { num: 13.1, lip: '192.168.7.96', oip: '192.168.7.96', port: [ 31311, 31312 ] , dep: ['corelogic','hall','oplog','toplist'] }
+    - { num: 11.1, lip: '10.0.0.2', oip: '80.22.45.3', port: [ 12006, 9010 ] , dep: ['corelogic','hall','oplog','statuskeeper','toplist'], GWtype: 'false' }
     statuskeeper:
-    - { num: 15.1, lip: '192.168.7.96', oip: '192.168.7.96', port: [ 31511, 31512 ] , dep: ['corelogic','oplog'] }
+    - { num: 15.1, lip: '10.0.0.2', oip: '80.22.45.3', port: [ 12015, 9015 ] , dep: ['corelogic','oplog'], GWtype: 'false' }
     toplist:
-    - { num: 10.1, lip: '192.168.7.96', oip: '192.168.7.96', port: [ 31011, 31012 ] , dep: None }
-    version:
-    - { num: 3.1,  lip: '192.168.7.96', oip: '192.168.7.96', port: [ 30311, 30312 ] , dep: None }
+    - { num: 10.1, lip: '10.0.0.2', oip: '80.22.45.3', port: [ 12005, 9009 ] , dep: None, GWtype: 'false' }
+    jackpot:
+    - { num: 19.1,  lip: '10.0.0.2', oip: '80.22.45.3', port: [ 12019, 19019 ] , dep: ['corelogic'], GWtype: 'false' }
