@@ -312,20 +312,6 @@ SendLimit : 100
 RecvLimit : 100\n''' %(conf['service']['coredata_logic'][0]['num'],
                       conf['service']['coredata_logic'][0]['lip'],
                       conf['service']['coredata_logic'][0]['port'][0])
-            elif dep == 'oplog':
-                msg = '''ServerEntries {
-    Id : "%s"
-    Addrs : "%s:%d"
-}
-RouteEntries {
-    HashBegin : 0
-    HashEnd : 511
-    ServerIdx : 0
-}
-SendLimit : 100
-RecvLimit : 100\n''' %(conf['service']['oplogs'][0]['num'],
-                      conf['service']['oplogs'][0]['lip'],
-                      conf['service']['oplogs'][0]['port'][0])
             else:
                 msg = '''ServerEntries {
     Id : "%s"
